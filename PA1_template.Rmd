@@ -7,19 +7,55 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```{r}
+data <- read.csv(unz('activity.zip', 'activity.csv'))
+removedMissingSteps <- data[!is.na(data$steps),]
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r}
+totalStepsPerDay <- tapply(removedMissingSteps$steps, removedMissingSteps$date, sum)
 
+#Remove days without data
+totalStepsPerDay <- totalStepsPerDay[!is.na(totalStepsPerDay)]
+
+hist(totalStepsPerDay, main='Histogram of Total Steps per Day')
+print(paste('Median of total steps is', median(totalStepsPerDay)))
+print(paste('Mean of total steps is', mean(totalStepsPerDay)))
+```
 
 
 ## What is the average daily activity pattern?
-
+```{r}
+averagesByIntervals <- tapply(removedMissingSteps$steps, removedMissingSteps$interval, mean)
+plot(names(averagesByIntervals), averagesByIntervals, type='l', main='Average Activity Pattern by 5-Minute Interval')
+maxValue <- max(averagesByIntervals)
+maxInterval <- names(averagesByIntervals[averagesByIntervals == maxValue])
+print(paste('The max time interval on average is', maxInterval))
+```
 
 
 ## Imputing missing values
+```{r}
+rowsWithNasBooleans <- !complete.cases(data)
+missingCases <- sum(rowsWithNasBooleans)
+print(paste('Number of rows with missing data is', missingCases))
+```
 
+```{r}
+#going to impute missing data with the mean of all of the steps
+meanOfStepsOverall <- mean(data$steps, na.rm=TRUE)
+stepsFilledIn <- data$steps
+stepsFilledIn[rowsWithNasBooleans] <- meanOfStepsOverall
+stepsFilledInDf <- data
+stepsFilledInDf$steps <- stepsFilledIn
+```
 
+```{r}
+hist(totalStepsPerDay, main='Histogram of Total Steps per Day')
+print(paste('Median of total steps is', median(totalStepsPerDay)))
+print(paste('Mean of total steps is', mean(totalStepsPerDay)))
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
